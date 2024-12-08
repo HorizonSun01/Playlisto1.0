@@ -8,8 +8,8 @@ export default function HomeScreenManager() {
         console.log("hello");
 
         const clientId = '08cd79f1f0ae4fc190b72365e3b1e312'; // Replace with your actual client ID
-        const redirectUri = 'http://localhost:5173'; // Replace with your redirect URI
-        const scopes = 'http://localhost:5173'; // Adjust the scopes as needed
+        const redirectUri = 'http://localhost:5173/'; // Replace with your redirect URI
+        const scopes = 'playlist-read-private playlist-read-collaborative';
 
         const authUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`;
         const popup = window.open(authUrl, 'SpotifyAuth', 'width=600,height=800');
