@@ -12,6 +12,7 @@ function App() {
           <button className="primary-button">Start Game</button>
           <button className="primary-button">Join Room</button>
           <button className="primary-button">Daily Challenge</button>
+          <button className="primary-button">Daily Challenge</button>
         </div>
       </main>
     </div>
