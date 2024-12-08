@@ -1,17 +1,18 @@
 import React from 'react'
 import HomeScreen from '../HomeScreen'
 import { Box } from '@mui/material'
+import { useNavigate } from 'react-router-dom';
 
 export default function HomeScreenManager() {
+    const navigate = useNavigate()
 
     const handleSpotifyAuth = () => {
-        const clientId = '08cd79f1f0ae4fc190b72365e3b1e312'; // Replace with your actual client ID
-        const redirectUri = 'http://localhost:5173/'; // Replace with your redirect URI
+        const clientId = '08cd79f1f0ae4fc190b72365e3b1e312';
+        const redirectUri = 'http://localhost:5173/';
         const scopes = 'playlist-read-private playlist-read-collaborative';
 
         const authUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`;
 
-        // Open a new popup
         const popup = window.open(authUrl, 'SpotifyAuth', 'width=600,height=800');
 
         if (!popup) {
@@ -19,7 +20,6 @@ export default function HomeScreenManager() {
             return;
         }
 
-        // Poll for the access token
         const interval = setInterval(() => {
             try {
                 if (popup.closed) {
@@ -28,7 +28,6 @@ export default function HomeScreenManager() {
                     return;
                 }
 
-                // Check if the popup has navigated to the redirect URI
                 const popupUrl = popup.location.href;
                 if (popupUrl.startsWith(redirectUri)) {
                     const params = new URLSearchParams(popup.location.hash.substring(1));
@@ -36,16 +35,17 @@ export default function HomeScreenManager() {
 
                     if (token) {
                         console.log('Access token:', token);
-                        popup.close(); // Close the popup once the token is retrieved
+                        popup.close();
+                        navigate("/room")
                         clearInterval(interval);
 
-                        // Use the token for API requests (e.g., fetch playlists)
                     } else {
                         console.error('Access token not found');
                     }
                 }
             } catch (error) {
-                // Ignore cross-origin errors until the popup navigates back to your app's domain
+                console.log(error);
+
             }
         }, 500);
     };
