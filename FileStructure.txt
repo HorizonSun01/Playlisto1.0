@@ -1,0 +1,120 @@
+here is the basic file stucture:
+
+Root Directory
+-index.html
+-style.css
+
+Frontend Directory (src/)
+-React Components
+- -App.jsx
+- -HomeScreen.jsx
+- -RoomScreen.jsx
+- -GameScreen.jsx
+
+- Services
+- -SpotifyService.js
+
+- Utilities
+- -GameSocket.js
+
+Backend Directory (server/)
+- Core Files
+- -server.js
+
+- Controllers
+- -GameController.js
+
+- Models
+- -GameState.js 
+
+
+
+Files Sorted by Order of Creation
+Uneffected by Other Files
+
+index.html
+
+Explanation:
+This is the foundational HTML file that serves as the entry point for the React application. It provides a single <div> with an ID (e.g., root) where the React app will mount.
+How to Write:
+Create a basic HTML5 structure. Include a <head> section for the title, meta tags, and a link to the style.css file. The <body> should have a single <div> with an ID to be used by React's DOM rendering. Ensure no additional static content is hardcoded here since React will dynamically handle all UI rendering.
+
+style.css
+
+Explanation:
+This file handles all visual styling across the application. It is used to define the "flowing gas" background effect, button styles, layout, and responsiveness for both desktop and mobile views.
+How to Write:
+Use CSS to create a fluid background animation using gradients and keyframes. Define classes for buttons (Start Game, Join Game, etc.), text fields, and containers. Implement media queries to adjust styles for different screen sizes. Prioritize consistency in colors (blue, light blue, purple, pink) and avoid excessively bright tones.
+
+models/GameState.js
+
+Explanation:
+This file defines the MongoDB schema for storing persistent game data, such as room states, player scores, and progress. It operates independently of other files.
+How to Write:
+Use Mongoose to define a schema with fields like roomCode, hostId, playerData (array of objects containing player ID, name, and score), and currentRound. Include default values for fields where applicable and ensure data validation (e.g., max players set to 12). Export the model for use in the backend.
+Effected by Other Files
+
+App.jsx
+
+Draws Information From: None directly, but it imports HomeScreen.jsx, RoomScreen.jsx, and GameScreen.jsx.
+Explanation:
+Acts as the main layout component, rendering other components (screens) based on routing. It uses React Router to navigate between the Home, Room, and Game screens.
+How to Write:
+Set up React Router in this file. Define routes for each screen (e.g., /, /room, /game) and a Switch statement to ensure only one route is active at a time. Import and render the respective components for each route.
+
+HomeScreen.jsx
+
+Draws Information From: None, but it triggers navigation to RoomScreen or Spotify login flow.
+Explanation:
+Provides the initial user interface with three buttons (Start Game, Join Game, Daily Challenge). Implements a popup with "Coming Soon..." for the Daily Challenge button.
+How to Write:
+Create a React component with three clickable elements styled as buttons. Use useState to manage the "Coming Soon..." popup. Trigger navigation to other screens using React Router’s useNavigate function when Start Game or Join Game is clicked.
+
+SpotifyService.js (Frontend)
+
+Draws Information From: Spotify Web API.
+Explanation:
+Handles Spotify-related API calls, such as fetching playlists and retrieving tracks. Requires the Spotify token provided during login.
+How to Write:
+Use fetch or axios to make calls to Spotify endpoints. Functions include getPlaylists (to fetch a list of playlists) and getTracks (to retrieve tracks from selected playlists). Use the token in the Authorization header for each request. Ensure error handling for cases like expired tokens or empty playlists.
+
+oomScreen.jsx
+
+Draws Information From:
+SpotifyService.js for playlists.
+GameSocket.js for real-time player data and actions.
+Explanation:
+Displays the room interface where the host selects playlists, sets rounds, and starts the game. Shows a player list and ready status for all participants.
+How to Write:
+Use React’s useEffect to fetch playlists on load and render them in a selectable format (e.g., checkboxes). Use socket events to display real-time updates for player joins, ready status, and the host's actions. Include a "Start Game" button that becomes active only when all players are ready.
+
+GameScreen.jsx
+
+Draws Information From:
+GameSocket.js for real-time game state updates.
+SpotifyService.js for track playback.
+Explanation:
+Displays the main gameplay interface, including the track stopper, responsive search bar, and dynamic scoreboard.
+How to Write:
+Use state hooks to manage the current song, stopper value, and guesses. Display a timer that dynamically updates. Implement a responsive search bar using React’s onChange event and filter logic to match user input against available track names. Use socket events to update the scoreboard and announce the next round.
+
+server.js
+
+Draws Information From:
+GameController.js for managing game logic.
+GameSocket.js for real-time communication.
+SpotifyService.js for backend Spotify requests.
+Explanation:
+Main backend server that initializes Express, connects to MongoDB, and sets up socket.io for multiplayer functionality.
+How to Write:
+Create an Express app, set up middleware (CORS, JSON parsing), and define API endpoints for Spotify-related tasks. Initialize a MongoDB connection and configure socket.io to listen for real-time player events like guesses and skips.
+
+GameSocket.js
+
+Draws Information From:
+GameController.js for game state logic.
+server.js for initialization.
+Explanation:
+Manages real-time events like player guesses, round transitions, and scoreboard updates.
+How to Write:
+Set up socket listeners for events (joinRoom, makeGuess, startRound, etc.). Emit updates back to all connected clients (e.g., current scores, next song). Include logic to handle disconnections and host reassignment.
