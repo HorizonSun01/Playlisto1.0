@@ -5,8 +5,8 @@ Root Directory
 -style.css
 
 Frontend Directory (src/)
+-App.jsx
 -React Components
-- -App.jsx
 - -HomeScreen.jsx
 - -RoomScreen.jsx
 - -GameScreen.jsx

@@ -1,22 +1,23 @@
-import { useState } from 'react'
-import './App.css'
+import { Box } from '@mui/material';
+import HomeScreen from './ReactComponent/HomeScreen';
+import "./App.css";
 
 function App() {
   return (
-    <div className="app">
-      <header className="app-header">
-        <h1>Playlisto</h1>
-      </header>
-      <main className="app-main">
-        <div className="button-container">
-          <button className="primary-button">Start Game</button>
-          <button className="primary-button">Join Room</button>
-          <button className="primary-button">Daily Challenge</button>
-          <button className="primary-button">Daily Challenge</button>
-        </div>
-      </main>
-    </div>
-  )
+  <> 
+  <Box
+      sx={{
+        height: '100vh',
+        width: '100vw',
+        background: 'linear-gradient(45deg, #2C3E50, #3498DB, #9B59B6)',
+        backgroundSize: '400% 400%',
+        animation: 'gradient 15s ease infinite',
+      }}
+    >
+      <HomeScreen />
+    </Box>
+  </>
+  );
 }
 
-export default App 
+export default App;
