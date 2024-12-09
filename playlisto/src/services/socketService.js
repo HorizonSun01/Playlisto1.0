@@ -8,13 +8,21 @@ class SocketService {
 
     async connect() {
         return new Promise((resolve, reject) => {
-            if (this.socket && this.socket.connected) {
-                console.log('Socket already connected.');
+            if (this.socket?.connected) {
                 resolve(this.socket);
                 return;
             }
 
-            this.socket = io('http://localhost:3000');
+            if (this.socket) {
+                this.socket.disconnect();
+                this.socket = null;
+            }
+
+            this.socket = io('http://localhost:3000', {
+                reconnection: true,
+                reconnectionAttempts: 5,
+                reconnectionDelay: 1000,
+            });
 
             this.socket.on('connect', () => {
                 console.log('Connected to server');
@@ -32,14 +40,40 @@ class SocketService {
 
             this.socket.on('disconnect', (reason) => {
                 console.warn(`Socket disconnected: ${reason}`);
+                if (reason === 'io server disconnect') {
+                    // Reconnect if server disconnected
+                    this.socket.connect();
+                }
             });
         });
     }
 
     // Room management
     async createRoom(hostName, rounds = 10, isPrivate = false) {
-        const socket = await this.connect();
-        socket.emit('createRoom', { hostName, rounds, isPrivate });
+        try {
+            const socket = await this.connect();
+            return new Promise((resolve, reject) => {
+                socket.emit('createRoom', { hostName, rounds, isPrivate });
+                
+                // Wait for room creation confirmation
+                socket.once('roomCreated', (data) => {
+                    this.roomCode = data.room.code;
+                    resolve(data);
+                });
+
+                socket.once('error', (error) => {
+                    reject(error);
+                });
+
+                // Timeout after 5 seconds
+                setTimeout(() => {
+                    reject(new Error('Room creation timeout'));
+                }, 5000);
+            });
+        } catch (error) {
+            console.error('Failed to create room:', error);
+            throw error;
+        }
     }
 
     async joinRoom(roomCode, playerName) {
@@ -94,6 +128,15 @@ class SocketService {
             this.roomCode = null;
             console.log('Socket disconnected');
         }
+    }
+
+    setRoomCode(code) {
+        this.roomCode = code;
+        console.log('Room code set:', code);
+    }
+
+    getRoomCode() {
+        return this.roomCode;
     }
 }
 

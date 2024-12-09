@@ -26,30 +26,38 @@ io.on("connection", (socket) => {
 
   // Create a new room
   socket.on("createRoom", ({ hostName, rounds, isPrivate }) => {
-    const roomCode = generateRoomCode();
-    const room = {
-      code: roomCode,
-      host: socket.id,
-      players: [
-        {
-          id: socket.id,
-          name: hostName,
-          isReady: true,
-          isHost: true,
-          score: 0,
+    try {
+      const roomCode = generateRoomCode();
+      const room = {
+        code: roomCode,
+        host: socket.id,
+        players: [
+          {
+            id: socket.id,
+            name: hostName,
+            isReady: true,
+            isHost: true,
+            score: 0,
+          },
+        ],
+        settings: {
+          rounds: rounds || 10,
+          isPrivate: isPrivate || false,
+          selectedPlaylists: [],
         },
-      ],
-      settings: {
-        rounds,
-        isPrivate,
-        selectedPlaylists: [],
-      },
-      gameState: "waiting", // waiting, playing, finished
-    };
+        gameState: "waiting", // waiting, playing, finished
+      };
 
-    gameRooms.set(roomCode, room);
-    socket.join(roomCode);
-    socket.emit("roomCreated", room);
+      gameRooms.set(roomCode, room);
+      socket.join(roomCode);
+      
+      // Emit room created event with room data
+      socket.emit('roomCreated', { room });
+      console.log('Room created:', roomCode);
+    } catch (error) {
+      console.error('Error creating room:', error);
+      socket.emit('error', { message: 'Failed to create room' });
+    }
   });
 
   // Join a room
