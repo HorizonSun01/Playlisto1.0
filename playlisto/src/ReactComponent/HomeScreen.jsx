@@ -1,7 +1,9 @@
-import React from 'react';
-import { Typography, Stack, Button } from '@mui/material';
+import React, { useState } from 'react';
+import { Typography, Stack, Button, TextField } from '@mui/material';
 
-export default function HomeScreen({ handleSpotifyAuth }) {
+export default function HomeScreen({setPlayerName, handleStartGame}) {
+
+
     return (
         <Stack
             sx={{
@@ -42,8 +44,30 @@ export default function HomeScreen({ handleSpotifyAuth }) {
                 sx={{ flex: 1 }}
             >
                 <Stack spacing={2} sx={{ width: '100%', maxWidth: 300 }}>
+                    <TextField
+                        placeholder="Enter your name"
+                        value={playerName}
+                        onChange={(e) => setPlayerName(e.target.value)}
+                        variant="outlined"
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                color: 'white',
+                                bgcolor: 'rgba(255, 255, 255, 0.2)',
+                                borderRadius: 2,
+                                '& fieldset': { border: 'none' },
+                                '&:hover fieldset': { border: 'none' },
+                                '&.Mui-focused fieldset': { border: 'none' },
+                            },
+                            '& .MuiOutlinedInput-input': {
+                                '&::placeholder': {
+                                    color: 'rgba(255, 255, 255, 0.7)',
+                                    opacity: 1,
+                                },
+                            },
+                        }}
+                    />
                     <Button
-                        onClick={() => handleSpotifyAuth()}
+                        onClick={handleStartGame}
                         variant="contained"
                         sx={{
                             py: 1.5,

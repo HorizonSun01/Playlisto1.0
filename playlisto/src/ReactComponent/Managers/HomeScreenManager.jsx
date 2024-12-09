@@ -50,6 +50,16 @@ export default function HomeScreenManager() {
         }, 500);
     };
 
+    const [playerName, setPlayerName] = useState('');
+
+    const handleStartGame = () => {
+        if (!playerName.trim()) {
+            alert('Please enter your name first');
+            return;
+        }
+        handleSpotifyAuth();
+    };
+
     return (
         <Box
             sx={{
@@ -60,7 +70,7 @@ export default function HomeScreenManager() {
                 animation: 'gradient 15s ease infinite',
             }}
         >
-            <HomeScreen handleSpotifyAuth={handleSpotifyAuth} />
+            <HomeScreen setPlayerName={setPlayerName} handleStartGame={handleStartGame} />
         </Box>
     )
 }
