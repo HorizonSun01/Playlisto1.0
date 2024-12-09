@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Typography, Stack, Button, TextField } from '@mui/material';
 
-export default function HomeScreen({setPlayerName, handleStartGame}) {
+export default function HomeScreen({ playerName, setPlayerName, handleStartGame }) {
 
 
     return (

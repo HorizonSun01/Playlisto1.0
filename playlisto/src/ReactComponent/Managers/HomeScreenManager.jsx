@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import HomeScreen from '../HomeScreen'
 import { Box } from '@mui/material'
 import { useNavigate } from 'react-router-dom';
@@ -70,7 +70,7 @@ export default function HomeScreenManager() {
                 animation: 'gradient 15s ease infinite',
             }}
         >
-            <HomeScreen setPlayerName={setPlayerName} handleStartGame={handleStartGame} />
+            <HomeScreen playerName={playerName} setPlayerName={setPlayerName} handleStartGame={handleStartGame} />
         </Box>
     )
 }
