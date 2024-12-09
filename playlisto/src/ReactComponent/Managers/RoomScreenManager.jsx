@@ -2,84 +2,49 @@ import React, { useState, useEffect } from 'react';
 import RoomScreen from '../RoomScreen';
 import { Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import socketService from '../../services/socketService';
 
 export default function RoomScreenManager() {
     const navigate = useNavigate();
-    const [roomData, setRoomData] = useState({
-        roomCode: generateRoomCode(),
-        players: [
-            { id: 1, name: "Host Player", isReady: true, isHost: true },
-            { id: 2, name: "Player 2", isReady: false, isHost: false },
-            { id: 3, name: "Player 3", isReady: false, isHost: false },
-        ],
-        selectedPlaylists: [],
-        rounds: 10,
-        isPrivate: false,
-        hostTimer: null
-    });
+    const [roomData, setRoomData] = useState(null);
 
-    function generateRoomCode() {
-        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        let code = '';
-        for (let i = 0; i < 6; i++) {
-            code += characters.charAt(Math.floor(Math.random() * characters.length));
-        }
-        return code;
-    }
+    useEffect(() => {
+        // Setup socket listeners
+        socketService.onRoomUpdated(({ room }) => {
+            setRoomData(room);
+        });
+
+        socketService.onPlayerJoined(({ room }) => {
+            setRoomData(room);
+        });
+
+        return () => {
+            socketService.disconnect();
+        };
+    }, []);
 
     const handlePlaylistSelect = (playlists) => {
-        setRoomData(prev => ({
-            ...prev,
-            selectedPlaylists: playlists
-        }));
+        socketService.updateSettings({ selectedPlaylists: playlists });
     };
 
     const handleRoundsChange = (newRounds) => {
         if (newRounds >= 5 && newRounds <= 20) {
-            setRoomData(prev => ({
-                ...prev,
-                rounds: newRounds
-            }));
+            socketService.updateSettings({ rounds: newRounds });
         }
     };
 
-    const handlePlayerReady = (playerId) => {
-        setRoomData(prev => ({
-            ...prev,
-            players: prev.players.map(player =>
-                player.id === playerId
-                    ? { ...player, isReady: !player.isReady }
-                    : player
-            )
-        }));
-    };
-
-    const handleKickPlayer = (playerId) => {
-        setRoomData(prev => ({
-            ...prev,
-            players: prev.players.filter(player => player.id !== playerId)
-        }));
-    };
-
-    const handlePrivacyToggle = () => {
-        setRoomData(prev => ({
-            ...prev,
-            isPrivate: !prev.isPrivate
-        }));
+    const handlePlayerReady = () => {
+        socketService.setPlayerReady();
     };
 
     const handleLeaveRoom = () => {
+        socketService.disconnect();
         navigate('/');
     };
 
-    const handleStartGame = () => {
-        const allPlayersReady = roomData.players.every(player => player.isReady);
-        const hasPlaylists = roomData.selectedPlaylists.length > 0;
-
-        if (allPlayersReady && hasPlaylists) {
-            navigate('/game');
-        }
-    };
+    if (!roomData) {
+        return <div>Loading...</div>;
+    }
 
     return (
         <Box
@@ -96,10 +61,7 @@ export default function RoomScreenManager() {
                 onPlaylistSelect={handlePlaylistSelect}
                 onRoundsChange={handleRoundsChange}
                 onPlayerReady={handlePlayerReady}
-                onKickPlayer={handleKickPlayer}
-                onPrivacyToggle={handlePrivacyToggle}
                 onLeaveRoom={handleLeaveRoom}
-                onStartGame={handleStartGame}
             />
         </Box>
     );

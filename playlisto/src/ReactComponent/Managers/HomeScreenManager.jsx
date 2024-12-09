@@ -1,10 +1,27 @@
-import React, { useState } from 'react'
-import HomeScreen from '../HomeScreen'
-import { Box } from '@mui/material'
+import React, { useState, useEffect } from 'react';
+import HomeScreen from '../HomeScreen';
+import { Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import socketService from '../../services/socketService';
 
 export default function HomeScreenManager() {
-    const navigate = useNavigate()
+    const navigate = useNavigate();
+    const [playerName, setPlayerName] = useState('');
+
+    useEffect(() => {
+        // Connect to socket server when component mounts
+        const socket = socketService.connect();
+
+        // Listen for room creation success
+        socketService.onRoomCreated(({ room }) => {
+            console.log('Room created:', room);
+            navigate('/room');
+        });
+
+        return () => {
+            socketService.disconnect();
+        };
+    }, [navigate]);
 
     const handleSpotifyAuth = () => {
         const clientId = '08cd79f1f0ae4fc190b72365e3b1e312';
@@ -24,7 +41,6 @@ export default function HomeScreenManager() {
             try {
                 if (popup.closed) {
                     clearInterval(interval);
-                    console.error('Popup was closed before completing authentication.');
                     return;
                 }
 
@@ -34,23 +50,17 @@ export default function HomeScreenManager() {
                     const token = params.get('access_token');
 
                     if (token) {
-                        console.log('Access token:', token);
                         popup.close();
-                        navigate("/room")
+                        // Create room after successful auth
+                        socketService.createRoom(playerName);
                         clearInterval(interval);
-
-                    } else {
-                        console.error('Access token not found');
                     }
                 }
             } catch (error) {
                 console.log(error);
-
             }
         }, 500);
     };
-
-    const [playerName, setPlayerName] = useState('');
 
     const handleStartGame = () => {
         if (!playerName.trim()) {
@@ -70,7 +80,11 @@ export default function HomeScreenManager() {
                 animation: 'gradient 15s ease infinite',
             }}
         >
-            <HomeScreen playerName={playerName} setPlayerName={setPlayerName} handleStartGame={handleStartGame} />
+            <HomeScreen 
+                playerName={playerName} 
+                setPlayerName={setPlayerName} 
+                handleStartGame={handleStartGame} 
+            />
         </Box>
-    )
+    );
 }
