@@ -6,59 +6,84 @@ class SocketService {
         this.roomCode = null;
     }
 
-    connect() {
-        if (!this.socket) {
+    async connect() {
+        return new Promise((resolve, reject) => {
+            if (this.socket && this.socket.connected) {
+                console.log('Socket already connected.');
+                resolve(this.socket);
+                return;
+            }
+
             this.socket = io('http://localhost:3000');
-            
-            // Setup basic listeners
+
             this.socket.on('connect', () => {
                 console.log('Connected to server');
+                resolve(this.socket);
+            });
+
+            this.socket.on('connect_error', (err) => {
+                console.error('Connection error:', err);
+                reject(err);
             });
 
             this.socket.on('error', ({ message }) => {
                 console.error('Socket error:', message);
             });
-        }
-        return this.socket;
+
+            this.socket.on('disconnect', (reason) => {
+                console.warn(`Socket disconnected: ${reason}`);
+            });
+        });
     }
 
     // Room management
-    createRoom(hostName, rounds = 10, isPrivate = false) {
-        this.socket.emit('createRoom', { hostName, rounds, isPrivate });
+    async createRoom(hostName, rounds = 10, isPrivate = false) {
+        const socket = await this.connect();
+        socket.emit('createRoom', { hostName, rounds, isPrivate });
     }
 
-    joinRoom(roomCode, playerName) {
+    async joinRoom(roomCode, playerName) {
+        const socket = await this.connect();
         this.roomCode = roomCode;
-        this.socket.emit('joinRoom', { roomCode, playerName });
+        socket.emit('joinRoom', { roomCode, playerName });
     }
 
     // Player actions
-    setPlayerReady() {
-        if (this.roomCode) {
-            this.socket.emit('playerReady', { roomCode: this.roomCode });
+    async setPlayerReady() {
+        if (!this.roomCode) {
+            console.error('Room code is not set.');
+            return;
         }
+        const socket = await this.connect();
+        socket.emit('playerReady', { roomCode: this.roomCode });
     }
 
-    updateSettings(settings) {
-        if (this.roomCode) {
-            this.socket.emit('updateSettings', { 
-                roomCode: this.roomCode, 
-                settings 
-            });
+    async updateSettings(settings) {
+        if (!this.roomCode) {
+            console.error('Room code is not set.');
+            return;
         }
+        const socket = await this.connect();
+        socket.emit('updateSettings', { roomCode: this.roomCode, settings });
     }
 
     // Event listeners
-    onRoomCreated(callback) {
-        this.socket.on('roomCreated', callback);
+    async onRoomCreated(callback) {
+        const socket = await this.connect();
+        socket.off('roomCreated'); // Prevent duplicate listeners
+        socket.on('roomCreated', callback);
     }
 
-    onPlayerJoined(callback) {
-        this.socket.on('playerJoined', callback);
+    async onPlayerJoined(callback) {
+        const socket = await this.connect();
+        socket.off('playerJoined');
+        socket.on('playerJoined', callback);
     }
 
-    onRoomUpdated(callback) {
-        this.socket.on('roomUpdated', callback);
+    async onRoomUpdated(callback) {
+        const socket = await this.connect();
+        socket.off('roomUpdated');
+        socket.on('roomUpdated', callback);
     }
 
     // Cleanup
@@ -66,10 +91,11 @@ class SocketService {
         if (this.socket) {
             this.socket.disconnect();
             this.socket = null;
+            this.roomCode = null;
+            console.log('Socket disconnected');
         }
     }
 }
 
-// Create a singleton instance
 const socketService = new SocketService();
-export default socketService; 
+export default socketService;
