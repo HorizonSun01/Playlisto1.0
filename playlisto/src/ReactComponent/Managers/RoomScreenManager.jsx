@@ -76,6 +76,16 @@ export default function RoomScreenManager() {
     navigate("/");
   };
 
+  const handleStartGame = async () => {
+    try {
+      await socketService.startGame();
+      navigate('/game');
+    } catch (error) {
+      console.error('Failed to start game:', error);
+      alert('Failed to start game. Please try again.');
+    }
+  };
+
   if (!roomData) {
     return <div>Loading...</div>;
   }
@@ -96,6 +106,7 @@ export default function RoomScreenManager() {
         onRoundsChange={handleRoundsChange}
         onPlayerReady={handlePlayerReady}
         onLeaveRoom={handleLeaveRoom}
+        onStartGame={handleStartGame}
       />
     </Box>
   );

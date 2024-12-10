@@ -45,12 +45,14 @@ io.on("connection", (socket) => {
   socket.on("createRoom", ({ hostName, rounds, isPrivate }) => {
     try {
       const roomCode = generateRoomCode();
+      const hostId = socket.id;
+
       const room = {
         code: roomCode,
-        host: socket.id,
+        host: hostId,
         players: [
           {
-            id: socket.id,
+            id: hostId,
             name: hostName,
             isReady: true,
             isHost: true,
@@ -62,17 +64,15 @@ io.on("connection", (socket) => {
           isPrivate: isPrivate || false,
           selectedPlaylists: [],
         },
-        gameState: "waiting", // waiting, playing, finished
+        gameState: "waiting",
       };
 
       gameRooms.set(roomCode, room);
       socket.join(roomCode);
-
       playerSessions.set(socket.id, roomCode);
 
-      // Emit room created event with room data
       socket.emit("roomCreated", { room });
-      console.log("Room created:", roomCode);
+      console.log("Room created:", roomCode, "Host:", hostId);
     } catch (error) {
       console.error("Error creating room:", error);
       socket.emit("error", { message: "Failed to create room" });
@@ -183,6 +183,25 @@ io.on("connection", (socket) => {
         }
       }
     }
+  });
+
+  // Add a handler for game start
+  socket.on("startGame", ({ roomCode }) => {
+    const room = gameRooms.get(roomCode);
+    if (!room || room.host !== socket.id) {
+      socket.emit("error", { message: "Not authorized to start game" });
+      return;
+    }
+
+    // Verify all players are ready
+    if (!room.players.every((player) => player.isReady)) {
+      socket.emit("error", { message: "Not all players are ready" });
+      return;
+    }
+
+    // Update game state
+    room.gameState = "playing";
+    io.to(roomCode).emit("gameStarted", { room });
   });
 });
 

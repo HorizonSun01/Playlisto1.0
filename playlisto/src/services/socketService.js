@@ -156,6 +156,32 @@ class SocketService {
   getLastRoomData() {
     return this.lastRoomData;
   }
+
+  getSocketId() {
+    return this.socket?.id;
+  }
+
+  async startGame() {
+    if (!this.roomCode) {
+      throw new Error('No room code set');
+    }
+    const socket = await this.connect();
+    return new Promise((resolve, reject) => {
+      socket.emit('startGame', { roomCode: this.roomCode });
+
+      socket.once('gameStarted', (data) => {
+        resolve(data);
+      });
+
+      socket.once('error', (error) => {
+        reject(error);
+      });
+
+      setTimeout(() => {
+        reject(new Error('Start game timeout'));
+      }, 5000);
+    });
+  }
 }
 
 const socketService = new SocketService();
