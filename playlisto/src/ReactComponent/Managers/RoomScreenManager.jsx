@@ -1,77 +1,102 @@
-import React, { useState, useEffect } from 'react';
-import RoomScreen from '../RoomScreen';
-import { Box } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import socketService from '../../services/socketService';
+import React, { useState, useEffect } from "react";
+import RoomScreen from "../RoomScreen";
+import { Box } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import socketService from "../../services/socketService";
 
 export default function RoomScreenManager() {
-    const navigate = useNavigate();
-    const [roomData, setRoomData] = useState(null);
+  const navigate = useNavigate();
+  const [roomData, setRoomData] = useState(() => {
+    // Initialize with stored room data if available
+    const storedData = socketService.getLastRoomData();
+    console.log("Initial room data:", storedData);
+    return storedData;
+  });
 
-    useEffect(() => {
-        console.log("room data from room screen", roomData);
-        // Setup socket listeners
+  useEffect(() => {
+    const initializeRoom = async () => {
+      try {
+        await socketService.connect();
+
+        // If we don't have room data, try to rejoin
+        if (!roomData && socketService.getRoomCode()) {
+          console.log(
+            "Attempting to rejoin room:",
+            socketService.getRoomCode()
+          );
+          socketService.emit("rejoinRoom", {
+            roomCode: socketService.getRoomCode(),
+          });
+        }
+
+        // Setup listeners
         socketService.onRoomCreated(({ room }) => {
-            console.log("room", room);
-
-            setRoomData(room);
+          console.log("Room created in RoomScreen:", room);
+          setRoomData(room);
         });
 
         socketService.onRoomUpdated(({ room }) => {
-            setRoomData(room);
+          console.log("Room updated in RoomScreen:", room);
+          setRoomData(room);
         });
 
         socketService.onPlayerJoined(({ room }) => {
-            setRoomData(room);
+          console.log("Player joined in RoomScreen:", room);
+          setRoomData(room);
         });
-
-        return () => {
-            socketService.disconnect();
-        };
-    }, []);
-
-
-    const handlePlaylistSelect = (playlists) => {
-        socketService.updateSettings({ selectedPlaylists: playlists });
+      } catch (error) {
+        console.error("Failed to initialize room:", error);
+        navigate("/");
+      }
     };
 
-    const handleRoundsChange = (newRounds) => {
-        if (newRounds >= 5 && newRounds <= 20) {
-            socketService.updateSettings({ rounds: newRounds });
-        }
+    initializeRoom();
+
+    return () => {
+      socketService.removeListeners();
     };
+  }, [navigate]);
 
-    const handlePlayerReady = () => {
-        socketService.setPlayerReady();
-    };
+  const handlePlaylistSelect = (playlists) => {
+    socketService.updateSettings({ selectedPlaylists: playlists });
+  };
 
-    const handleLeaveRoom = () => {
-        socketService.disconnect();
-        navigate('/');
-    };
-
-
-    if (!roomData) {
-        return <div>Loading...</div>;
+  const handleRoundsChange = (newRounds) => {
+    if (newRounds >= 5 && newRounds <= 20) {
+      socketService.updateSettings({ rounds: newRounds });
     }
+  };
 
-    return (
-        <Box
-            sx={{
-                height: '100vh',
-                width: '100vw',
-                background: 'linear-gradient(45deg, #2C3E50, #3498DB, #9B59B6)',
-                backgroundSize: '400% 400%',
-                animation: 'gradient 15s ease infinite',
-            }}
-        >
-            <RoomScreen
-                roomData={roomData}
-                onPlaylistSelect={handlePlaylistSelect}
-                onRoundsChange={handleRoundsChange}
-                onPlayerReady={handlePlayerReady}
-                onLeaveRoom={handleLeaveRoom}
-            />
-        </Box>
-    );
+  const handlePlayerReady = () => {
+    socketService.setPlayerReady();
+  };
+
+  const handleLeaveRoom = () => {
+    socketService.disconnect();
+    navigate("/");
+  };
+
+  if (!roomData) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <Box
+      sx={{
+        height: "100vh",
+        width: "100vw",
+        background: "linear-gradient(45deg, #2C3E50, #3498DB, #9B59B6)",
+        backgroundSize: "400% 400%",
+        animation: "gradient 15s ease infinite",
+      }}
+    >
+      <RoomScreen
+        roomData={roomData}
+        onPlaylistSelect={handlePlaylistSelect}
+        onRoundsChange={handleRoundsChange}
+        onPlayerReady={handlePlayerReady}
+        onLeaveRoom={handleLeaveRoom}
+      />
+    </Box>
+  );
 }

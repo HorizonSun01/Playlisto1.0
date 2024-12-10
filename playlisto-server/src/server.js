@@ -20,11 +20,28 @@ app.use(express.json());
 // Store game rooms in memory (In production, you'd want to use a database)
 const gameRooms = new Map();
 
+// Add a session map to track player sessions
+const playerSessions = new Map(); // Maps socket.id to roomCode
+
 // Socket.IO connection handling
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
 
-  // Create a new room
+  // Handle reconnection attempts
+  socket.on("rejoinRoom", ({ roomCode }) => {
+    const room = gameRooms.get(roomCode);
+    if (room) {
+      const existingPlayer = room.players.find((p) => p.id === socket.id);
+      if (existingPlayer) {
+        socket.join(roomCode);
+        playerSessions.set(socket.id, roomCode);
+        socket.emit("roomUpdated", { room });
+        console.log(`Player ${socket.id} rejoined room ${roomCode}`);
+      }
+    }
+  });
+
+  // Modify createRoom to track session
   socket.on("createRoom", ({ hostName, rounds, isPrivate }) => {
     try {
       const roomCode = generateRoomCode();
@@ -51,16 +68,18 @@ io.on("connection", (socket) => {
       gameRooms.set(roomCode, room);
       socket.join(roomCode);
 
+      playerSessions.set(socket.id, roomCode);
+
       // Emit room created event with room data
-      socket.emit('roomCreated', { room });
-      console.log('Room created:', roomCode);
+      socket.emit("roomCreated", { room });
+      console.log("Room created:", roomCode);
     } catch (error) {
-      console.error('Error creating room:', error);
-      socket.emit('error', { message: 'Failed to create room' });
+      console.error("Error creating room:", error);
+      socket.emit("error", { message: "Failed to create room" });
     }
   });
 
-  // Join a room
+  // Modify joinRoom to track session
   socket.on("joinRoom", ({ roomCode, playerName }) => {
     const room = gameRooms.get(roomCode);
 
@@ -85,6 +104,8 @@ io.on("connection", (socket) => {
     room.players.push(newPlayer);
     socket.join(roomCode);
     io.to(roomCode).emit("playerJoined", { room });
+
+    playerSessions.set(socket.id, roomCode);
   });
 
   // Player ready status change
@@ -108,23 +129,58 @@ io.on("connection", (socket) => {
     io.to(roomCode).emit("roomUpdated", { room });
   });
 
-  // Handle disconnection
+  // Modify disconnect handler to be more resilient
   socket.on("disconnect", () => {
-    for (const [roomCode, room] of gameRooms.entries()) {
-      const playerIndex = room.players.findIndex((p) => p.id === socket.id);
+    const roomCode = playerSessions.get(socket.id);
+    if (!roomCode) return;
 
-      if (playerIndex !== -1) {
-        room.players.splice(playerIndex, 1);
+    const room = gameRooms.get(roomCode);
+    if (!room) return;
 
-        if (room.players.length === 0) {
-          gameRooms.delete(roomCode);
-        } else if (room.host === socket.id) {
-          // Assign new host
-          room.host = room.players[0].id;
-          room.players[0].isHost = true;
+    // Don't remove the player immediately, give them a chance to reconnect
+    setTimeout(() => {
+      // Check if the player has reconnected
+      if (!io.sockets.adapter.rooms.get(roomCode)?.has(socket.id)) {
+        const playerIndex = room.players.findIndex((p) => p.id === socket.id);
+        if (playerIndex !== -1) {
+          room.players.splice(playerIndex, 1);
+          playerSessions.delete(socket.id);
+
+          if (room.players.length === 0) {
+            gameRooms.delete(roomCode);
+          } else if (room.host === socket.id) {
+            // Assign new host
+            room.host = room.players[0].id;
+            room.players[0].isHost = true;
+          }
+
+          io.to(roomCode).emit("roomUpdated", { room });
         }
+      }
+    }, 5000); // 5 second grace period for reconnection
+  });
 
-        io.to(roomCode).emit("roomUpdated", { room });
+  // Add explicit disconnection handler
+  socket.on("leaveRoom", () => {
+    const roomCode = playerSessions.get(socket.id);
+    if (roomCode) {
+      const room = gameRooms.get(roomCode);
+      if (room) {
+        const playerIndex = room.players.findIndex((p) => p.id === socket.id);
+        if (playerIndex !== -1) {
+          room.players.splice(playerIndex, 1);
+          playerSessions.delete(socket.id);
+          socket.leave(roomCode);
+
+          if (room.players.length === 0) {
+            gameRooms.delete(roomCode);
+          } else if (room.host === socket.id) {
+            room.host = room.players[0].id;
+            room.players[0].isHost = true;
+          }
+
+          io.to(roomCode).emit("roomUpdated", { room });
+        }
       }
     }
   });
