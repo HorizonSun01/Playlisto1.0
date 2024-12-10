@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import HomeScreen from "../HomeScreen";
+import JoinRoomDialog from "../JoinRoomDialog";
 import { Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import socketService from "../../services/socketService";
@@ -8,6 +9,8 @@ export default function HomeScreenManager() {
   const navigate = useNavigate();
   const [playerName, setPlayerName] = useState("");
   const [isConnecting, setIsConnecting] = useState(false);
+  const [joinRoomOpen, setJoinRoomOpen] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
 
   useEffect(() => {
     const setupSocketListeners = async () => {
@@ -19,8 +22,15 @@ export default function HomeScreenManager() {
           if (room && room.code) {
             socketService.setRoomCode(room.code);
             socketService.setLastRoomData(room);
-            navigate("/room");
+            navigate(`/room/${room.code}`);
           }
+        });
+
+        socketService.onPlayerJoined(({ room }) => {
+          console.log("Joined room:", room);
+          socketService.setRoomCode(room.code);
+          socketService.setLastRoomData(room);
+          navigate(`/room/${room.code}`);
         });
       } catch (error) {
         console.error("Socket connection failed:", error);
@@ -112,6 +122,29 @@ export default function HomeScreenManager() {
     handleSpotifyAuth();
   };
 
+  const handleJoinRoomClick = () => {
+    if (!playerName.trim()) {
+      alert("Please enter your name first");
+      return;
+    }
+    setJoinRoomOpen(true);
+  };
+
+  const handleJoinRoom = async (roomCode) => {
+    try {
+      setIsJoining(true);
+      const response = await socketService.joinRoom(roomCode, playerName);
+      if (response && response.room) {
+        setJoinRoomOpen(false);
+      }
+    } catch (error) {
+      console.error("Failed to join room:", error);
+      alert("Failed to join room. Please check the code and try again.");
+    } finally {
+      setIsJoining(false);
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -127,7 +160,17 @@ export default function HomeScreenManager() {
         setPlayerName={setPlayerName}
         handleStartGame={handleStartGame}
         isConnecting={isConnecting}
+        onJoinRoomClick={handleJoinRoomClick}
       />
+      {joinRoomOpen && (
+        <JoinRoomDialog
+          open={joinRoomOpen}
+          onClose={() => setJoinRoomOpen(false)}
+          playerName={playerName}
+          isJoining={isJoining}
+          onJoin={handleJoinRoom}
+        />
+      )}
     </Box>
   );
 }

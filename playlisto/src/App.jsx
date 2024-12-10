@@ -11,7 +11,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path='/' element={<HomeScreenManager />} />
-          <Route path='/room' element={<RoomScreenManager />} />
+          <Route path='/room/:roomCode' element={<RoomScreenManager />} />
         </Routes>
       </BrowserRouter>
     </>

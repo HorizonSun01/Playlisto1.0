@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import RoomScreen from "../RoomScreen";
 import { Box } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import socketService from "../../services/socketService";
 
 export default function RoomScreenManager() {
   const navigate = useNavigate();
+  const { roomCode } = useParams();
+
   const [roomData, setRoomData] = useState(() => {
-    // Initialize with stored room data if available
     const storedData = socketService.getLastRoomData();
     console.log("Initial room data:", storedData);
     return storedData;
@@ -18,18 +19,19 @@ export default function RoomScreenManager() {
       try {
         await socketService.connect();
 
-        // If we don't have room data, try to rejoin
-        if (!roomData && socketService.getRoomCode()) {
-          console.log(
-            "Attempting to rejoin room:",
-            socketService.getRoomCode()
-          );
-          socketService.emit("rejoinRoom", {
-            roomCode: socketService.getRoomCode(),
-          });
+        const currentRoomCode = roomCode || socketService.getRoomCode();
+
+        if (!currentRoomCode) {
+          console.error("No room code found");
+          navigate("/");
+          return;
         }
 
-        // Setup listeners
+        socketService.setRoomCode(currentRoomCode);
+
+        const socket = await socketService.connect();
+        socket.emit("getRoomData", { roomCode: currentRoomCode });
+
         socketService.onRoomCreated(({ room }) => {
           console.log("Room created in RoomScreen:", room);
           setRoomData(room);
@@ -55,7 +57,7 @@ export default function RoomScreenManager() {
     return () => {
       socketService.removeListeners();
     };
-  }, [navigate]);
+  }, [navigate, roomCode]);
 
   const handlePlaylistSelect = (playlists) => {
     socketService.updateSettings({ selectedPlaylists: playlists });
@@ -79,10 +81,10 @@ export default function RoomScreenManager() {
   const handleStartGame = async () => {
     try {
       await socketService.startGame();
-      navigate('/game');
+      navigate("/game");
     } catch (error) {
-      console.error('Failed to start game:', error);
-      alert('Failed to start game. Please try again.');
+      console.error("Failed to start game:", error);
+      alert("Failed to start game. Please try again.");
     }
   };
 

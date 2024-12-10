@@ -76,9 +76,31 @@ class SocketService {
   }
 
   async joinRoom(roomCode, playerName) {
-    const socket = await this.connect();
-    this.roomCode = roomCode;
-    socket.emit("joinRoom", { roomCode, playerName });
+    try {
+      const socket = await this.connect();
+      return new Promise((resolve, reject) => {
+        socket.emit("joinRoom", { roomCode, playerName });
+
+        // Listen for successful join
+        socket.once("playerJoined", (data) => {
+          this.roomCode = data.room.code;
+          resolve(data);
+        });
+
+        // Listen for errors
+        socket.once("error", (error) => {
+          reject(new Error(error.message));
+        });
+
+        // Timeout after 5 seconds
+        setTimeout(() => {
+          reject(new Error("Join room timeout"));
+        }, 5000);
+      });
+    } catch (error) {
+      console.error("Failed to join room:", error);
+      throw error;
+    }
   }
 
   // Player actions
@@ -163,22 +185,22 @@ class SocketService {
 
   async startGame() {
     if (!this.roomCode) {
-      throw new Error('No room code set');
+      throw new Error("No room code set");
     }
     const socket = await this.connect();
     return new Promise((resolve, reject) => {
-      socket.emit('startGame', { roomCode: this.roomCode });
+      socket.emit("startGame", { roomCode: this.roomCode });
 
-      socket.once('gameStarted', (data) => {
+      socket.once("gameStarted", (data) => {
         resolve(data);
       });
 
-      socket.once('error', (error) => {
+      socket.once("error", (error) => {
         reject(error);
       });
 
       setTimeout(() => {
-        reject(new Error('Start game timeout'));
+        reject(new Error("Start game timeout"));
       }, 5000);
     });
   }
