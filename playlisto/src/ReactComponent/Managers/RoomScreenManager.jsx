@@ -9,7 +9,14 @@ export default function RoomScreenManager() {
     const [roomData, setRoomData] = useState(null);
 
     useEffect(() => {
+        console.log("room data from room screen", roomData);
         // Setup socket listeners
+        socketService.onRoomCreated(({ room }) => {
+            console.log("room", room);
+
+            setRoomData(room);
+        });
+
         socketService.onRoomUpdated(({ room }) => {
             setRoomData(room);
         });
@@ -22,6 +29,7 @@ export default function RoomScreenManager() {
             socketService.disconnect();
         };
     }, []);
+
 
     const handlePlaylistSelect = (playlists) => {
         socketService.updateSettings({ selectedPlaylists: playlists });
@@ -41,6 +49,7 @@ export default function RoomScreenManager() {
         socketService.disconnect();
         navigate('/');
     };
+
 
     if (!roomData) {
         return <div>Loading...</div>;

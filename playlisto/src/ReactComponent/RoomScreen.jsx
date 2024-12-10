@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
     Typography,
     Stack,
@@ -42,6 +42,7 @@ export default function RoomScreen({
     const handleCopyRoomCode = () => {
         navigator.clipboard.writeText(roomData.roomCode);
     };
+
 
     return (
         <Stack sx={{ height: '100%', p: 3, color: 'white' }} spacing={3}>

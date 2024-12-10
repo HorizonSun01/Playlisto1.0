@@ -54,7 +54,7 @@ class SocketService {
             const socket = await this.connect();
             return new Promise((resolve, reject) => {
                 socket.emit('createRoom', { hostName, rounds, isPrivate });
-                
+
                 // Wait for room creation confirmation
                 socket.once('roomCreated', (data) => {
                     this.roomCode = data.room.code;
@@ -105,7 +105,10 @@ class SocketService {
     async onRoomCreated(callback) {
         const socket = await this.connect();
         socket.off('roomCreated'); // Prevent duplicate listeners
-        socket.on('roomCreated', callback);
+        socket.on('roomCreated', ({ room }) => {
+            this.roomCode = room.code;
+            callback({ room });
+        });
     }
 
     async onPlayerJoined(callback) {
@@ -137,6 +140,14 @@ class SocketService {
 
     getRoomCode() {
         return this.roomCode;
+    }
+
+    async removeListeners() {
+        if (this.socket) {
+            this.socket.off('roomCreated');
+            this.socket.off('roomUpdated');
+            this.socket.off('playerJoined');
+        }
     }
 }
 

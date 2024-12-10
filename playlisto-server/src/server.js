@@ -50,7 +50,7 @@ io.on("connection", (socket) => {
 
       gameRooms.set(roomCode, room);
       socket.join(roomCode);
-      
+
       // Emit room created event with room data
       socket.emit('roomCreated', { room });
       console.log('Room created:', roomCode);
