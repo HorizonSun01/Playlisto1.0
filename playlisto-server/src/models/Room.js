@@ -1,51 +1,31 @@
-class Room {
-    constructor(code, hostId, hostName, settings) {
-        this.code = code;
-        this.host = hostId;
-        this.players = [{
-            id: hostId,
-            name: hostName,
-            isReady: true,
-            isHost: true,
-            score: 0
-        }];
-        this.settings = {
-            rounds: settings.rounds || 10,
-            isPrivate: settings.isPrivate || false,
-            selectedPlaylists: settings.selectedPlaylists || []
-        };
-        this.gameState = 'waiting';
-        this.currentRound = 0;
-        this.currentSong = null;
-    }
+const mongoose = require('mongoose');
 
-    addPlayer(playerId, playerName) {
-        this.players.push({
-            id: playerId,
-            name: playerName,
-            isReady: false,
-            isHost: false,
-            score: 0
-        });
-    }
+const PlayerSchema = new mongoose.Schema({
+  id: String,
+  name: String,
+  isReady: Boolean,
+  isHost: Boolean,
+  score: Number
+});
 
-    removePlayer(playerId) {
-        const index = this.players.findIndex(p => p.id === playerId);
-        if (index !== -1) {
-            this.players.splice(index, 1);
-        }
-    }
+const RoomSchema = new mongoose.Schema({
+  code: {
+    type: String,
+    unique: true,
+    required: true
+  },
+  host: String,
+  players: [PlayerSchema],
+  settings: {
+    rounds: Number,
+    isPrivate: Boolean,
+    selectedPlaylists: [String]
+  },
+  gameState: {
+    type: String,
+    enum: ['waiting', 'playing', 'finished'],
+    default: 'waiting'
+  }
+}, { timestamps: true });
 
-    updatePlayerScore(playerId, points) {
-        const player = this.players.find(p => p.id === playerId);
-        if (player) {
-            player.score += points;
-        }
-    }
-
-    isEveryoneReady() {
-        return this.players.every(player => player.isReady);
-    }
-}
-
-module.exports = Room; 
+module.exports = mongoose.model('Room', RoomSchema); 

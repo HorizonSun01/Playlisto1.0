@@ -77,6 +77,9 @@ class SocketService {
 
   async joinRoom(roomCode, playerName) {
     try {
+      console.log("roomCode from joinRoom", roomCode);
+      console.log("playerName from joinRoom", playerName);
+
       const socket = await this.connect();
       return new Promise((resolve, reject) => {
         socket.emit("joinRoom", { roomCode, playerName });
