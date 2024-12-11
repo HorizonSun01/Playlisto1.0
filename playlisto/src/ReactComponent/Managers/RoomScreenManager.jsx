@@ -64,7 +64,7 @@ export default function RoomScreenManager() {
     const newPlaylists = currentPlaylists.includes(playlistId)
       ? currentPlaylists.filter(id => id !== playlistId)
       : [...currentPlaylists, playlistId];
-    
+
     socketService.updateSettings({ selectedPlaylists: newPlaylists });
   };
 
@@ -96,6 +96,10 @@ export default function RoomScreenManager() {
   if (!roomData) {
     return <div>Loading...</div>;
   }
+
+  useEffect(() => {
+    console.log("roomData", roomData);
+  }, [roomData])
 
   return (
     <Box

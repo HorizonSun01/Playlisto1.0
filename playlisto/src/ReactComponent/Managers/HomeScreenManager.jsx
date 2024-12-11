@@ -101,24 +101,27 @@ export default function HomeScreenManager() {
 
       spotifyService.setAccessToken(authResult);
 
-      const [userPlaylists, featuredPlaylists] = await Promise.all([
-        spotifyService.fetchUserPlaylists(),
-        spotifyService.fetchFeaturedPlaylists(),
-      ]);
+      const userPlaylists = await spotifyService.fetchUserPlaylists();
+      console.log('Fetched playlists:', userPlaylists);
 
+      // Ensure socket connection
       await socketService.connect();
+
+      // Create room with playlists
       const response = await socketService.createRoom(playerName, {
-        playlists: [...userPlaylists, ...featuredPlaylists],
+        playlists: userPlaylists
       });
 
-      console.log("Room creation response:", response);
+      console.log('Room creation response:', response);
 
       if (!response || !response.room) {
-        throw new Error("Failed to create room");
+        throw new Error('Failed to create room');
       }
+
+      // Room created successfully, navigation will be handled by the socket listener
     } catch (error) {
-      console.error("Authentication failed:", error);
-      alert("Authentication failed. Please try again.");
+      console.error('Failed to create room:', error);
+      alert('Failed to create room. Please try again.');
     } finally {
       setIsConnecting(false);
     }

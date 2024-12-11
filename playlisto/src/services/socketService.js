@@ -4,82 +4,42 @@ class SocketService {
   constructor() {
     this.socket = null;
     this.roomCode = null;
-    this.connecting = null;
     this.lastRoomData = null;
   }
 
   async connect() {
-    if (this.connecting) return this.connecting;
-
-    if (this.socket?.connected) {
-      return Promise.resolve(this.socket);
+    if (!this.socket) {
+      this.socket = io('http://localhost:3000');
+      await new Promise((resolve, reject) => {
+        this.socket.on('connect', () => resolve());
+        this.socket.on('connect_error', (error) => reject(error));
+      });
     }
-
-    this.connecting = new Promise((resolve, reject) => {
-      this.socket = io("http://localhost:3000", {
-        reconnection: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000,
-      });
-
-      this.socket.on("connect", () => {
-        console.log("Connected to server");
-        this.connecting = null;
-        resolve(this.socket);
-      });
-
-      this.socket.on("connect_error", (err) => {
-        console.error("Connection error:", err);
-        this.connecting = null;
-        reject(err);
-      });
-
-      this.socket.on("error", ({ message }) => {
-        console.error("Socket error:", message);
-      });
-
-      this.socket.on("disconnect", (reason) => {
-        console.warn(`Socket disconnected: ${reason}`);
-        if (reason === "io server disconnect") {
-          this.socket.connect();
-        }
-      });
-    });
-
-    return this.connecting;
+    return this.socket;
   }
 
-  // Room management
   async createRoom(hostName, options = {}) {
     try {
-      const socket = await this.connect();
+      if (!this.socket) await this.connect();
+      
       return new Promise((resolve, reject) => {
-        socket.emit("createRoom", { 
-          hostName, 
-          rounds: options.rounds || 10, 
+        this.socket.emit('createRoom', {
+          hostName,
+          rounds: options.rounds || 10,
           isPrivate: options.isPrivate || false,
           playlists: options.playlists || []
         });
 
-        socket.once("roomCreated", (data) => {
-          this.roomCode = data.room.code;
-          resolve(data);
-        });
-
-        socket.once("error", (error) => {
-          reject(error);
-        });
-
-        setTimeout(() => {
-          reject(new Error("Room creation timeout"));
-        }, 5000);
+        this.socket.once('roomCreated', (response) => resolve(response));
+        this.socket.once('error', (error) => reject(error));
       });
     } catch (error) {
-      console.error("Failed to create room:", error);
+      console.error('Failed to create room:', error);
       throw error;
     }
   }
 
+  // Room management
   async joinRoom(roomCode, playerName) {
     try {
       console.log("roomCode from joinRoom", roomCode);

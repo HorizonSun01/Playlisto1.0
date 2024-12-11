@@ -13,7 +13,7 @@ class SpotifyService {
     }
 
     try {
-      const response = await fetch('https://api.spotify.com/v1/me/playlists?limit=50', {
+      const response = await fetch('https://api.spotify.com/v1/me/playlists?limit=5', {
         headers: {
           'Authorization': `Bearer ${this.accessToken}`
         }
@@ -24,13 +24,19 @@ class SpotifyService {
       }
 
       const data = await response.json();
-      return data.items.map(playlist => ({
-        id: playlist.id,
-        name: playlist.name,
-        tracks: playlist.tracks.total,
-        uri: playlist.uri,
-        isUserPlaylist: true
-      }));
+      if (data && data.items) {
+        console.log("data", data);
+        return data.items
+          .filter(playlist => playlist !== null && playlist.id && playlist.name)
+          .map(playlist => ({
+            id: playlist.id,
+            name: playlist.name,
+            tracks: playlist.tracks.total,
+            uri: playlist.uri,
+            isUserPlaylist: true
+          }));
+      }
+      return [];
     } catch (error) {
       console.error('Error fetching user playlists:', error);
       throw error;
@@ -43,7 +49,7 @@ class SpotifyService {
     }
 
     try {
-      const response = await fetch('https://api.spotify.com/v1/browse/featured-playlists?limit=20', {
+      const response = await fetch('https://api.spotify.com/v1/me/playlists?limit=5', {
         headers: {
           'Authorization': `Bearer ${this.accessToken}`
         }
@@ -54,13 +60,19 @@ class SpotifyService {
       }
 
       const data = await response.json();
-      return data.playlists.items.map(playlist => ({
-        id: playlist.id,
-        name: playlist.name,
-        tracks: playlist.tracks.total,
-        uri: playlist.uri,
-        isUserPlaylist: false
-      }));
+
+      if (data && data.playlists && data.playlists.items) {
+        return data.playlists.items
+          .filter(playlist => playlist !== null && playlist.id && playlist.name)
+          .map(playlist => ({
+            id: playlist.id,
+            name: playlist.name,
+            tracks: playlist.tracks.total,
+            uri: playlist.uri,
+            isUserPlaylist: false
+          }));
+      }
+      return [];
     } catch (error) {
       console.error('Error fetching featured playlists:', error);
       throw error;

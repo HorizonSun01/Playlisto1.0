@@ -143,8 +143,9 @@ io.on("connection", (socket) => {
   });
 
   // Modify createRoom to track session
-  socket.on("createRoom", async ({ hostName, rounds, isPrivate }) => {
+  socket.on("createRoom", async ({ hostName, rounds, isPrivate, playlists }) => {
     try {
+      console.log("Creating room with playlists:", playlists);
       const roomCode = await generateRoomCode();
       const hostId = socket.id;
 
@@ -163,6 +164,7 @@ io.on("connection", (socket) => {
           isPrivate: isPrivate || false,
           selectedPlaylists: []
         },
+        playlists: playlists || [],
         gameState: "waiting"
       });
 
