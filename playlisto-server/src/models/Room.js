@@ -16,6 +16,12 @@ const RoomSchema = new mongoose.Schema({
   },
   host: String,
   players: [PlayerSchema],
+  playlists: [{
+    id: String,
+    name: String,
+    tracks: Number,
+    uri: String
+  }],
   settings: {
     rounds: Number,
     isPrivate: Boolean,

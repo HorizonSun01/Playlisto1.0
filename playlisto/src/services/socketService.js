@@ -50,11 +50,16 @@ class SocketService {
   }
 
   // Room management
-  async createRoom(hostName, rounds = 10, isPrivate = false) {
+  async createRoom(hostName, options = {}) {
     try {
       const socket = await this.connect();
       return new Promise((resolve, reject) => {
-        socket.emit("createRoom", { hostName, rounds, isPrivate });
+        socket.emit("createRoom", { 
+          hostName, 
+          rounds: options.rounds || 10, 
+          isPrivate: options.isPrivate || false,
+          playlists: options.playlists || []
+        });
 
         socket.once("roomCreated", (data) => {
           this.roomCode = data.room.code;

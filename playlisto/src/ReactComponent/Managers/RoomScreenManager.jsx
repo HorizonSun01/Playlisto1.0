@@ -59,8 +59,13 @@ export default function RoomScreenManager() {
     };
   }, [navigate, roomCode]);
 
-  const handlePlaylistSelect = (playlists) => {
-    socketService.updateSettings({ selectedPlaylists: playlists });
+  const handlePlaylistSelect = (playlistId) => {
+    const currentPlaylists = roomData.settings.selectedPlaylists;
+    const newPlaylists = currentPlaylists.includes(playlistId)
+      ? currentPlaylists.filter(id => id !== playlistId)
+      : [...currentPlaylists, playlistId];
+    
+    socketService.updateSettings({ selectedPlaylists: newPlaylists });
   };
 
   const handleRoundsChange = (newRounds) => {

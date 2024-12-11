@@ -4,6 +4,7 @@ import JoinRoomDialog from "../JoinRoomDialog";
 import { Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import socketService from "../../services/socketService";
+import spotifyService from "../../services/spotifyService.js";
 
 export default function HomeScreenManager() {
   const navigate = useNavigate();
@@ -98,9 +99,18 @@ export default function HomeScreenManager() {
         }, 120000);
       });
 
-      await socketService.connect();
+      spotifyService.setAccessToken(authResult);
 
-      const response = await socketService.createRoom(playerName);
+      const [userPlaylists, featuredPlaylists] = await Promise.all([
+        spotifyService.fetchUserPlaylists(),
+        spotifyService.fetchFeaturedPlaylists(),
+      ]);
+
+      await socketService.connect();
+      const response = await socketService.createRoom(playerName, {
+        playlists: [...userPlaylists, ...featuredPlaylists],
+      });
+
       console.log("Room creation response:", response);
 
       if (!response || !response.room) {

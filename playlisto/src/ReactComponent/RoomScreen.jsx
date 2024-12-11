@@ -13,6 +13,7 @@ import {
   Box,
   Checkbox,
   ButtonGroup,
+  ListItemIcon,
 } from "@mui/material";
 import {
   ContentCopy,
@@ -188,34 +189,75 @@ export default function RoomScreen({
             </>
           )}
 
-          {/* Action Buttons */}
-          <Stack direction="row" spacing={2} justifyContent="space-between">
-            <Button
-              startIcon={<ExitToApp />}
-              onClick={onLeaveRoom}
-              variant="contained"
-              sx={{
-                bgcolor: "rgba(255, 255, 255, 0.2)",
-                "&:hover": { bgcolor: "rgba(255, 255, 255, 0.3)" },
-              }}
-            >
-              Leave Room
-            </Button>
-            {isHost && (
-              <Button
-                onClick={onStartGame}
-                disabled={!allPlayersReady || !hasPlaylists}
-                variant="contained"
-                sx={{
-                  bgcolor: "rgba(255, 255, 255, 0.2)",
-                  "&:hover": { bgcolor: "rgba(255, 255, 255, 0.3)" },
-                }}
-              >
-                Start Game
-              </Button>
-            )}
-          </Stack>
+          {/* Add Playlists Section */}
+          <Paper
+            sx={{
+              bgcolor: "rgba(255, 255, 255, 0.1)",
+              p: 2,
+              borderRadius: 2,
+              flex: 1,
+              maxHeight: "400px",
+              overflow: "auto",
+            }}
+          >
+            <Typography variant="h6" mb={2}>
+              Available Playlists
+            </Typography>
+            <List>
+              {roomData.playlists?.map((playlist) => (
+                <ListItem
+                  key={playlist.id}
+                  button
+                  disabled={!isHost}
+                  onClick={() => isHost && onPlaylistSelect(playlist.id)}
+                >
+                  <ListItemIcon>
+                    <Checkbox
+                      checked={roomData.settings.selectedPlaylists.includes(
+                        playlist.id
+                      )}
+                      disabled={!isHost}
+                      sx={{ color: "white" }}
+                    />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={playlist.name}
+                    secondary={`${playlist.tracks} tracks`}
+                    sx={{
+                      "& .MuiListItemText-secondary": {
+                        color: "rgba(255, 255, 255, 0.7)",
+                      },
+                    }}
+                  />
+                </ListItem>
+              ))}
+            </List>
+          </Paper>
         </Stack>
+      </Stack>
+
+      {/* Update Start Game button to check for selected playlists */}
+      <Stack direction="row" spacing={2} justifyContent="space-between">
+        <Button
+          onClick={onLeaveRoom}
+          variant="contained"
+          sx={{ bgcolor: "rgba(255, 255, 255, 0.2)" }}
+        >
+          Leave Room
+        </Button>
+        {isHost && (
+          <Button
+            onClick={onStartGame}
+            disabled={
+              !roomData.players.every((p) => p.isReady) ||
+              roomData.settings.selectedPlaylists.length === 0
+            }
+            variant="contained"
+            sx={{ bgcolor: "rgba(255, 255, 255, 0.2)" }}
+          >
+            Start Game
+          </Button>
+        )}
       </Stack>
     </Stack>
   );
