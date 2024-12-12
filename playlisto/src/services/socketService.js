@@ -21,7 +21,7 @@ class SocketService {
   async createRoom(hostName, options = {}) {
     try {
       if (!this.socket) await this.connect();
-      
+
       return new Promise((resolve, reject) => {
         this.socket.emit('createRoom', {
           hostName,
@@ -164,7 +164,7 @@ class SocketService {
       });
 
       socket.once("error", (error) => {
-        reject(error);
+        reject("error failed ok", error);
       });
 
       setTimeout(() => {

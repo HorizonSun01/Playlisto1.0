@@ -305,8 +305,8 @@ io.on("connection", (socket) => {
   });
 
   // Add a handler for game start
-  socket.on("startGame", ({ roomCode }) => {
-    const room = gameRooms.get(roomCode);
+  socket.on("startGame", async ({ roomCode }) => {
+    const room = await gameRooms.get(roomCode);
     if (!room || room.host !== socket.id) {
       socket.emit("error", { message: "Not authorized to start game" });
       return;

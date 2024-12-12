@@ -86,7 +86,8 @@ export default function RoomScreenManager() {
   const handleStartGame = async () => {
     try {
       await socketService.startGame();
-      navigate("/game");
+      console.log("roomData.code", roomData.code);
+      navigate(`/game/${roomData.code}`);
     } catch (error) {
       console.error("Failed to start game:", error);
       alert("Failed to start game. Please try again.");

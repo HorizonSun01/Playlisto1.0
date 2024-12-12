@@ -3,6 +3,7 @@ import { Box, TextField, Typography, Paper, Stack } from "@mui/material";
 import "../styles/GameScreen.css";
 
 export default function GameScreen() {
+  
   const mockData = {
     currentRound: 1,
     totalRounds: 10,
