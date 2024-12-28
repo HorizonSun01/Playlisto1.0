@@ -10,7 +10,6 @@ export default function RoomScreenManager() {
 
   const [roomData, setRoomData] = useState(() => {
     const storedData = socketService.getLastRoomData();
-    console.log("Initial room data:", storedData);
     return storedData;
   });
 
@@ -22,7 +21,6 @@ export default function RoomScreenManager() {
         const currentRoomCode = roomCode || socketService.getRoomCode();
 
         if (!currentRoomCode) {
-          console.error("No room code found");
           navigate("/");
           return;
         }
@@ -33,21 +31,17 @@ export default function RoomScreenManager() {
         socket.emit("getRoomData", { roomCode: currentRoomCode });
 
         socketService.onRoomCreated(({ room }) => {
-          console.log("Room created in RoomScreen:", room);
           setRoomData(room);
         });
 
         socketService.onRoomUpdated(({ room }) => {
-          console.log("Room updated in RoomScreen:", room);
           setRoomData(room);
         });
 
         socketService.onPlayerJoined(({ room }) => {
-          console.log("Player joined in RoomScreen:", room);
           setRoomData(room);
         });
       } catch (error) {
-        console.error("Failed to initialize room:", error);
         navigate("/");
       }
     };
@@ -86,10 +80,8 @@ export default function RoomScreenManager() {
   const handleStartGame = async () => {
     try {
       await socketService.startGame();
-      console.log("roomData.code", roomData.code);
       navigate(`/game/${roomData.code}`);
     } catch (error) {
-      console.error("Failed to start game:", error);
       alert("Failed to start game. Please try again.");
     }
   };
@@ -98,9 +90,6 @@ export default function RoomScreenManager() {
     return <div>Loading...</div>;
   }
 
-  useEffect(() => {
-    console.log("roomData", roomData);
-  }, [roomData])
 
   return (
     <Box

@@ -19,7 +19,6 @@ export default function HomeScreenManager() {
         await socketService.connect();
 
         socketService.onRoomCreated(({ room }) => {
-          console.log("Room created in HomeScreen:", room);
           if (room && room.code) {
             socketService.setRoomCode(room.code);
             socketService.setLastRoomData(room);
@@ -28,13 +27,11 @@ export default function HomeScreenManager() {
         });
 
         socketService.onPlayerJoined(({ room }) => {
-          console.log("Joined room:", room);
           socketService.setRoomCode(room.code);
           socketService.setLastRoomData(room);
           navigate(`/room/${room.code}`);
         });
       } catch (error) {
-        console.error("Socket connection failed:", error);
         alert("Failed to connect to server. Please try again.");
       }
     };
@@ -102,7 +99,6 @@ export default function HomeScreenManager() {
       spotifyService.setAccessToken(authResult);
 
       const userPlaylists = await spotifyService.fetchUserPlaylists();
-      console.log('Fetched playlists:', userPlaylists);
 
       // Ensure socket connection
       await socketService.connect();
@@ -112,7 +108,6 @@ export default function HomeScreenManager() {
         playlists: userPlaylists
       });
 
-      console.log('Room creation response:', response);
 
       if (!response || !response.room) {
         throw new Error('Failed to create room');
@@ -120,7 +115,6 @@ export default function HomeScreenManager() {
 
       // Room created successfully, navigation will be handled by the socket listener
     } catch (error) {
-      console.error('Failed to create room:', error);
       alert('Failed to create room. Please try again.');
     } finally {
       setIsConnecting(false);
@@ -151,7 +145,6 @@ export default function HomeScreenManager() {
         setJoinRoomOpen(false);
       }
     } catch (error) {
-      console.error("Failed to join room:", error);
       alert("Failed to join room. Please check the code and try again.");
     } finally {
       setIsJoining(false);

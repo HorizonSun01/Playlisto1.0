@@ -42,8 +42,6 @@ class SocketService {
   // Room management
   async joinRoom(roomCode, playerName) {
     try {
-      console.log("roomCode from joinRoom", roomCode);
-      console.log("playerName from joinRoom", playerName);
 
       const socket = await this.connect();
       return new Promise((resolve, reject) => {
@@ -160,6 +158,7 @@ class SocketService {
       socket.emit("startGame", { roomCode: this.roomCode });
 
       socket.once("gameStarted", (data) => {
+        console.log("gameStarted", data);
         resolve(data);
       });
 

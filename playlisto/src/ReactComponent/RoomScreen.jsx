@@ -23,7 +23,6 @@ import {
   Remove,
   Public,
   Lock,
-  ExitToApp,
 } from "@mui/icons-material";
 import socketService from "../services/socketService";
 

@@ -2,21 +2,7 @@ import React from "react";
 import { Box, TextField, Typography, Paper, Stack } from "@mui/material";
 import "../styles/GameScreen.css";
 
-export default function GameScreen() {
-  
-  const mockData = {
-    currentRound: 1,
-    totalRounds: 10,
-    timeLeft: 15,
-    players: [
-      { id: 1, name: "Player 1", score: 1000 },
-      { id: 2, name: "Player 2", score: 750 },
-      { id: 3, name: "Player 3", score: 500 },
-      { id: 4, name: "Player 4", score: 250 },
-      { id: 5, name: "Player 5", score: 100 },
-    ],
-    currentSong: "Now Playing: Unknown Song",
-  };
+export default function GameScreen({ gameData }) {
 
   return (
     <Box
@@ -41,7 +27,7 @@ export default function GameScreen() {
         p={2}
       >
         <Typography variant="h5">
-          Round {mockData.currentRound}/{mockData.totalRounds}
+          Round {gameData.settings.currentRound}/{gameData.settings.rounds}
         </Typography>
         <Paper
           sx={{
@@ -51,7 +37,7 @@ export default function GameScreen() {
             borderRadius: 2,
           }}
         >
-          <Typography variant="h5">{mockData.timeLeft}s</Typography>
+          <Typography variant="h5">{gameData.settings.timeLeft}s</Typography>
         </Paper>
       </Stack>
 
@@ -64,7 +50,7 @@ export default function GameScreen() {
             borderRadius: 2,
           }}
         >
-          <Typography variant="h5">{mockData.currentSong}</Typography>
+          <Typography variant="h5">{gameData.currentSong}</Typography>
         </Paper>
 
         <TextField
@@ -100,7 +86,7 @@ export default function GameScreen() {
           overflowY: "auto",
         }}
       >
-        {mockData.players.map((player) => (
+        {gameData.players.map((player) => (
           <Stack
             key={player.id}
             direction="row"
@@ -109,6 +95,7 @@ export default function GameScreen() {
               p: 1,
               borderBottom: 1,
               borderColor: "rgba(255, 255, 255, 0.1)",
+              width:"100px"
             }}
           >
             <Typography>{player.name}</Typography>

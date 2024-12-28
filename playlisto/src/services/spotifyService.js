@@ -25,7 +25,6 @@ class SpotifyService {
 
       const data = await response.json();
       if (data && data.items) {
-        console.log("data", data);
         return data.items
           .filter(playlist => playlist !== null && playlist.id && playlist.name)
           .map(playlist => ({
